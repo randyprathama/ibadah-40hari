@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rutinitas Ibadah 40 Hari</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #121212;
+      color: #ffffff;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .day {
+      background-color: #1e1e1e;
+      padding: 15px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(255,255,255,0.05);
+    }
+    label {
+      display: block;
+      margin: 5px 0;
+    }
+    .sub-label {
+      padding-left: 20px;
+    }
+    #chartContainer, #subChartContainer {
+      background-color: #1e1e1e;
+      padding: 20px;
+      margin-top: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(255,255,255,0.05);
+    }
+    canvas {
+      background-color: #1e1e1e;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Rutinitas Ibadah Harian - 40 Hari</h1>
+  <div id="container"></div>
+
+  <div id="chartContainer">
+    <h2>Grafik Progress Ibadah</h2>
+    <canvas id="ibadahChart"></canvas>
+  </div>
+
+  <div id="subChartContainer">
+    <h2>Grafik Detail Sub Ibadah</h2>
+    <canvas id="subChart"></canvas>
+  </div>
+
+  <script>
+    const ibadahList = [
+      "Tahajud",
+      "Qobliyatan Subuh",
+      "Subuh",
+      "Zikir Pagi",
+      "Dhuha",
+      "Qobliyatan Zuhur",
+      "Zuhur",
+      "Ashar",
+      "Maghrib",
+      "Ba'diyatan Maghrib",
+      "Zikir Sore",
+      "Isya",
+      "Ba'da Isya",
+      "Witir"
+    ];
+
+    const ibadahSub = {
+      "Subuh": ["Masjid", "Tepat Waktu", "Jamaah", "Sendiri"],
+      "Zuhur": ["Masjid", "Tepat Waktu", "Jamaah", "Sendiri"],
+      "Ashar": ["Masjid", "Tepat Waktu", "Jamaah", "Sendiri"],
+      "Maghrib": ["Masjid", "Tepat Waktu", "Jamaah", "Sendiri"],
+      "Isya": ["Masjid", "Tepat Waktu", "Jamaah", "Sendiri"]
+    };
+
+    const container = document.getElementById('container');
+    const progress = new Array(ibadahList.length).fill(0);
+    const subCounts = {"Masjid": 0, "Tepat Waktu": 0, "Jamaah": 0, "Sendiri": 0};
+
+    for (let day = 1; day <= 40; day++) {
+      const dayDiv = document.createElement('div');
+      dayDiv.classList.add('day');
+
+      const dayTitle = document.createElement('h2');
+      dayTitle.textContent = `Hari ke-${day}`;
+      dayDiv.appendChild(dayTitle);
+
+      ibadahList.forEach((ibadah, index) => {
+        const label = document.createElement('label');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.id = `day${day}-ibadah${index}`;
+
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) {
+            progress[index]++;
+          } else {
+            progress[index]--;
+          }
+          updateChart();
+        });
+
+        label.appendChild(checkbox);
+        label.append(` ${ibadah}`);
+        dayDiv.appendChild(label);
+
+        if (ibadahSub[ibadah]) {
+          ibadahSub[ibadah].forEach(sub => {
+            const subLabel = document.createElement('label');
+            subLabel.classList.add('sub-label');
+            const subCheckbox = document.createElement('input');
+            subCheckbox.type = 'checkbox';
+            subCheckbox.id = `day${day}-ibadah${index}-${sub}`;
+
+            subCheckbox.addEventListener('change', () => {
+              if (subCheckbox.checked) {
+                subCounts[sub]++;
+              } else {
+                subCounts[sub]--;
+              }
+              updateSubChart();
+            });
+
+            subLabel.appendChild(subCheckbox);
+            subLabel.append(` ${sub}`);
+            dayDiv.appendChild(subLabel);
+          });
+        }
+      });
+
+      container.appendChild(dayDiv);
+    }
+
+    const ctx = document.getElementById('ibadahChart').getContext('2d');
+    const ibadahChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ibadahList,
+        datasets: [{
+          label: 'Jumlah Ibadah Diselesaikan (dari 40)',
+          data: progress,
+          backgroundColor: 'rgba(75, 192, 192, 0.6)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 40,
+            ticks: {
+              color: '#ffffff'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#ffffff'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: '#ffffff'
+            }
+          },
+          tooltip: {
+            enabled: true
+          },
+          datalabels: {
+            display: true,
+            color: '#ffffff'
+          }
+        }
+      }
+    });
+
+    const subCtx = document.getElementById('subChart').getContext('2d');
+    const subChart = new Chart(subCtx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(subCounts),
+        datasets: [{
+          label: 'Jumlah Checklist Sub Ibadah',
+          data: Object.values(subCounts),
+          backgroundColor: 'rgba(255, 159, 64, 0.6)',
+          borderColor: 'rgba(255, 159, 64, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: '#ffffff'
+            }
+          },
+          x: {
+            ticks: {
+              color: '#ffffff'
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              color: '#ffffff'
+            }
+          },
+          tooltip: {
+            enabled: true
+          },
+          datalabels: {
+            display: true,
+            color: '#ffffff'
+          }
+        }
+      }
+    });
+
+    function updateChart() {
+      ibadahChart.data.datasets[0].data = progress;
+      ibadahChart.update();
+    }
+
+    function updateSubChart() {
+      subChart.data.datasets[0].data = Object.values(subCounts);
+      subChart.update();
+    }
+  </script>
+</body>
+</html>
